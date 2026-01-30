@@ -1,0 +1,12 @@
+{
+    "https://api.shinyapps.io": {
+        "server_url": "https://api.shinyapps.io",
+        "filename": "/home/potamochoerus/dev/RL-Cagnotte/SamuTracker",
+        "app_url": "https://potamochoerus.shinyapps.io/samutracker/",
+        "app_id": "16552897",
+        "app_guid": null,
+        "title": "SamuTracker",
+        "app_mode": "python-shiny",
+        "app_store_version": 1
+    }
+}
