@@ -2,3 +2,4 @@ faicons
 shiny
 seaborn
 pandas
+pyyaml
