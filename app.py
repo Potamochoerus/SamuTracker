@@ -27,8 +27,8 @@ with ui.sidebar(title="Filter games"):
     ui.input_slider(id="n_games", 
                     label="Number of games to use", 
                     min=1, 
-                    max=min(100, total_games), 
-                    value=min(100, total_games),
+                    max=100, 
+                    value=100,
                     step=1)
 
 
@@ -125,7 +125,7 @@ with ui.layout_columns():
 ui.include_css(app_dir / "styles.css")
 
 @reactive.calc
-def filtered_mh():
+def filter_mh_game_player():
     player_list = list(input.players())
     # First, filter by game mode
     filt_mh = match_history[match_history["GameMode"]==input.mode()]
@@ -134,8 +134,19 @@ def filtered_mh():
     filt_mh = filt_mh[filt_mh["Timestamp"].isin(games_with_all_selected_players)]
     # Keep only entries of players of interest
     filt_mh = filt_mh[filt_mh["AccountId"].isin(player_list)]
-    # Finally select n games.
-    unique_games = list(set(filt_mh.Timestamp))
-    games_selected = sorted(unique_games, reverse=True)[0:input.n_games()]
-    filt_mh = filt_mh[filt_mh.Timestamp.isin(games_selected)]
     return filt_mh
+
+@reactive.calc
+def filtered_mh():
+    mh = filter_mh_game_player()
+    unique_games = list(set(mh.Timestamp))
+    games_selected = sorted(unique_games, reverse=True)[0:input.n_games()]
+    mh = mh[mh.Timestamp.isin(games_selected)]
+    return mh
+
+
+@reactive.effect
+def _():
+    max_n_games = len(list(set(filter_mh_game_player()["Timestamp"])))
+    ui.update_slider(id="n_games",
+                     max=max_n_games)
