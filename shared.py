@@ -2,12 +2,18 @@ from pathlib import Path
 import pandas as pd
 import glob
 import yaml
+from datetime import timedelta
 
 app_dir = Path(__file__).parent
 threshold_score = 100
 with open("tracked_players.yml", "r") as f:
     tracked_players = yaml.safe_load(f)
 raw_data_path = app_dir / "data"
+
+# Reformat duration
+def str_to_timedelta(s):
+    m, sec = map(int, s.split(":"))
+    return timedelta(minutes=m, seconds=sec)
 
 # Read all matches
 def read_history(data_path):
@@ -47,6 +53,10 @@ def read_history(data_path):
 
     # Add Fixed name
     match_history["FixedName"] = match_history["AccountId"].map(tracked_players)
+
+    # Reformat possession
+    match_history["PossessionTime"] = [str_to_timedelta(x) for x in match_history["PossessionTime"]]
+    match_history["PossessionTime"] = match_history["PossessionTime"].dt.total_seconds()
 
     return match_history
 

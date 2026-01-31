@@ -34,14 +34,14 @@ with ui.sidebar(title="Filter games"):
 
 with ui.layout_columns():
     with ui.card(full_screen=True):
-        ui.card_header("Mean score")
+        ui.card_header("Mean possession time")
 
         @render.plot
-        def barplot_mean():
+        def barplot_mean_possession():
             bp = sns.barplot(
                 data=filtered_mh(),
                 x="FixedName",
-                y="Score",
+                y="PossessionTime",
                 hue="FixedName",
                 errorbar=None
             )
@@ -59,13 +59,12 @@ with ui.layout_columns():
         ui.card_header("Median score")
 
         @render.plot
-        def barplot_median():
+        def barplot_mean():
             bp = sns.barplot(
                 data=filtered_mh(),
                 x="FixedName",
                 y="Score",
                 hue="FixedName",
-                estimator=np.median,
                 errorbar=None
             )
             for p in bp.patches:
