@@ -4,7 +4,7 @@ import glob
 import yaml
 from datetime import timedelta
 
-app_dir = Path(__file__).parent
+app_dir = Path(__file__).parent / ".."
 threshold_score = 100
 with open("tracked_players.yml", "r") as f:
     tracked_players = yaml.safe_load(f)
@@ -70,5 +70,4 @@ def participation_dict(match_history):
     return(match_dict)
 
 match_history = read_history(raw_data_path)
-total_games = len(list(set(match_history.Timestamp)))
 participation_dictionary = participation_dict(match_history)

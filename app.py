@@ -4,7 +4,10 @@ from faicons import icon_svg
 import numpy as np
 
 # Import data from shared.py
-from shared import app_dir, match_history, threshold_score, tracked_players, total_games, participation_dictionary
+from src.shared import app_dir, match_history, threshold_score, tracked_players, participation_dictionary
+
+# Import plotting functions
+from src.plots import boxplot_stat
 
 # Import shiny
 from shiny import reactive
@@ -37,45 +40,17 @@ with ui.layout_columns():
         ui.card_header("Mean possession time")
 
         @render.plot
-        def barplot_mean_possession():
-            bp = sns.barplot(
-                data=filtered_mh(),
-                x="FixedName",
-                y="PossessionTime",
-                hue="FixedName",
-                errorbar=None
-            )
-            for p in bp.patches:
-                height = p.get_height()  # height of the bar
-                bp.text(
-                    x=p.get_x() + p.get_width() / 2,  # center of bar
-                    y=height + 0.3,                    # slightly above bar
-                    s=f"{int(height)}",                # text to display
-                    ha='center'                        # horizontal alignment
-                )
-            return bp
+        def possession_plot():
+            plot =  boxplot_stat(df=filtered_mh(), stat="PossessionTime")
+            return plot
 
     with ui.card(full_screen=True):
         ui.card_header("Median score")
 
         @render.plot
-        def barplot_mean():
-            bp = sns.barplot(
-                data=filtered_mh(),
-                x="FixedName",
-                y="Score",
-                hue="FixedName",
-                errorbar=None
-            )
-            for p in bp.patches:
-                height = p.get_height()  # height of the bar
-                bp.text(
-                    x=p.get_x() + p.get_width() / 2,  # center of bar
-                    y=height + 0.3,                    # slightly above bar
-                    s=f"{int(height)}",                # text to display
-                    ha='center'                        # horizontal alignment
-                )
-            return bp
+        def score_plot():
+            plot =  boxplot_stat(df=filtered_mh(), stat="Score")
+            return plot
 
 
 with ui.layout_columns():
@@ -100,26 +75,13 @@ with ui.layout_columns():
             )
 
     with ui.card(full_screen=True):
-        with ui.value_box(showcase=icon_svg("cow")):
-            "Games played"
-
-            @render.text
-            def count_games():
-                return input.n_games()
-
-        with ui.value_box(showcase=icon_svg("dog")):
-            "Games played again"
-
-            @render.text
-            def count_games_b():
-                return input.n_games()
-        
-        with ui.value_box(showcase=icon_svg("cat")):
-            "Games played to check ui"
-
-            @render.text
-            def count_games_c():
-                return input.n_games()
+        @render.data_frame
+        def summary_table():
+            df = filtered_mh()
+            df_grouped = df.groupby("AccountId")[["Goals", "Assists", "Saves", "Shots", "Demolishes"]].sum().reset_index()
+            df_grouped["AccountId"] = df_grouped["AccountId"].replace(tracked_players)
+            df_grouped = df_grouped.rename(columns={"AccountId": "Player"})
+            return df_grouped
 
 ui.include_css(app_dir / "styles.css")
 
