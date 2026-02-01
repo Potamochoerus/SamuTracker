@@ -1,6 +1,5 @@
 # Import general lib
 import seaborn as sns
-from faicons import icon_svg
 import numpy as np
 
 # Import data from shared.py
