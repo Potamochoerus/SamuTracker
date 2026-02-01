@@ -76,3 +76,26 @@ def participation_dict(match_history):
 
 match_history = read_history(raw_data_path)
 participation_dictionary = participation_dict(match_history)
+
+# variable dictionary
+variables_dictionary_numeric = {
+    "Score":"Score", 
+    "PossessionTime":"Possession time", 
+    "Goals":"Goals",
+    "Demolishes":"Demolishes",
+    "Shots":"Shots",
+    "Saves":"Saves",
+    "Assists":"Assists"}
+
+variables_dictionary_all = {
+    "AccountId":"Account ID",
+    "FixedName":"Player",
+    "Date":"Date",
+    "Time":"Time",
+    "Score":"Score", 
+    "PossessionTime":"Possession time", 
+    "Goals":"Goals",
+    "Demolishes":"Demolishes",
+    "Shots":"Shots",
+    "Saves":"Saves",
+    "Assists":"Assists"}

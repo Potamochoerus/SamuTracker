@@ -4,14 +4,15 @@ from faicons import icon_svg
 import numpy as np
 
 # Import data from shared.py
-from src.shared import app_dir, match_history, threshold_score, tracked_players, participation_dictionary
+from src.shared import app_dir, match_history, threshold_score, tracked_players, participation_dictionary, variables_dictionary_numeric
 
 # Import plotting functions
-from src.plots import boxplot_stat
+from src.plots import boxplot_stat, scatterplot_interactive
 
 # Import shiny
 from shiny import reactive
 from shiny.express import input, render, ui
+from shinywidgets import render_widget
 
 ui.page_opts(title="SamuTracker", fillable=True)
 
@@ -33,6 +34,18 @@ with ui.sidebar(title="Filter games"):
                     max=100, 
                     value=100,
                     step=1)
+    
+    ui.tags.hr()
+    ui.h5("Correlation options")
+    ui.input_select(id="x_var",
+                label="X variable",
+                choices=variables_dictionary_numeric,
+                selected="Score")
+    
+    ui.input_select(id="y_var",
+                label="Y variable",
+                choices=variables_dictionary_numeric,
+                selected="PossessionTime")
 
 
 with ui.layout_columns():
@@ -55,29 +68,12 @@ with ui.layout_columns():
 
 with ui.layout_columns():
     with ui.card(full_screen=True):
-        ui.card_header(f"Games with less than {threshold_score} points")
+        ui.card_header(f"Custom correlation")
 
-        @render.plot
-        def n_below_barplot():
-            df = filtered_mh()
-            df["below_threshold"] = df["Score"] < threshold_score
-
-            # Count per player
-            count_df = df.groupby("FixedName")["below_threshold"].sum().reset_index()
-            count_df.rename(columns={"below_threshold": f"count_below_{threshold_score}"}, inplace=True)
-
-            bp = sns.barplot(
-                x="FixedName",
-                y=f"count_below_{threshold_score}",
-                data=count_df,
-                hue="FixedName",
-                palette="pastel"
-            )
-
-            bp.set_xlabel("")
-            bp.set_ylabel("")
-
-            return bp
+        @render_widget
+        def interactive_plot():
+            plot = scatterplot_interactive(df=filtered_mh(), x=input.x_var(), y=input.y_var())
+            return plot
 
     with ui.card(full_screen=True):
         @render.data_frame
