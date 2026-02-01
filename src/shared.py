@@ -15,6 +15,12 @@ def str_to_timedelta(s):
     m, sec = map(int, s.split(":"))
     return timedelta(minutes=m, seconds=sec)
 
+def handle_players_with_coma(fields):
+    # Keep only the first field, fill the rest with NaN
+    expected_cols = 16  # adjust to your CSV's expected number of columns
+    new_line = fields[:1] + [pd.NA]*(expected_cols-1)
+    return new_line
+
 # Read all matches
 def read_history(data_path):
     """
@@ -25,12 +31,11 @@ def read_history(data_path):
     all_matches = glob.glob(str(data_path / "*.csv"))
     match_history = []
     for match in all_matches:
-        df_match = pd.read_csv(match, index_col=None, header=0)
+        df_match = pd.read_csv(match, index_col=None, header=0, on_bad_lines=handle_players_with_coma, engine='python')
         match_history.append(df_match)
 
     # Regroup all matches
     match_history = pd.concat(match_history, axis=0, ignore_index=True)
-    
     
     # Add date and time
     match_history[["Date", "Time"]] = match_history["Timestamp"].str.split("_", expand = True)

@@ -37,7 +37,7 @@ with ui.sidebar(title="Filter games"):
 
 with ui.layout_columns():
     with ui.card(full_screen=True):
-        ui.card_header("Mean possession time")
+        ui.card_header("Possession time (s)")
 
         @render.plot
         def possession_plot():
@@ -45,7 +45,7 @@ with ui.layout_columns():
             return plot
 
     with ui.card(full_screen=True):
-        ui.card_header("Median score")
+        ui.card_header("Scores")
 
         @render.plot
         def score_plot():
@@ -55,7 +55,7 @@ with ui.layout_columns():
 
 with ui.layout_columns():
     with ui.card(full_screen=True):
-        ui.card_header(f"Less than {threshold_score} points")
+        ui.card_header(f"Games with less than {threshold_score} points")
 
         @render.plot
         def n_below_barplot():
@@ -66,13 +66,18 @@ with ui.layout_columns():
             count_df = df.groupby("FixedName")["below_threshold"].sum().reset_index()
             count_df.rename(columns={"below_threshold": f"count_below_{threshold_score}"}, inplace=True)
 
-            return sns.barplot(
+            bp = sns.barplot(
                 x="FixedName",
                 y=f"count_below_{threshold_score}",
                 data=count_df,
                 hue="FixedName",
                 palette="pastel"
             )
+
+            bp.set_xlabel("")
+            bp.set_ylabel("")
+
+            return bp
 
     with ui.card(full_screen=True):
         @render.data_frame
