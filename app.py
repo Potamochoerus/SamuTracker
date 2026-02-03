@@ -19,7 +19,13 @@ with ui.sidebar(title="Filter games"):
     ui.input_select(id="mode",
                     label="Game mode",
                     choices=["3v3", "2v2", "1v1"])
-    
+
+    ui.input_switch(
+        id = "inclusion",
+        label = "Inclusive",
+        value = False
+    )
+
     ui.input_checkbox_group(
         id="players",
         label="Players",
@@ -90,8 +96,15 @@ def filter_mh_game_player():
     player_list = list(input.players())
     # First, filter by game mode
     filt_mh = match_history[match_history["GameMode"]==input.mode()]
-    # Then get only games where all selected players are present
-    games_with_all_selected_players = [k for k, v in participation_dictionary.items() if all(x in v for x in input.players())]
+    games_with_all_selected_players = []
+    if(input.inclusion){
+        # Then get games where any selected players are present
+        games_with_all_selected_players = [k for k, v in participation_dictionary.items() if any(x in v for x in input.players())]
+    }else{
+        # Then get only games where all selected players are present
+        games_with_all_selected_players = [k for k, v in participation_dictionary.items() if all(x in v for x in input.players())]
+    }
+
     filt_mh = filt_mh[filt_mh["Timestamp"].isin(games_with_all_selected_players)]
     # Keep only entries of players of interest
     filt_mh = filt_mh[filt_mh["AccountId"].isin(player_list)]
