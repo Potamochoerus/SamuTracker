@@ -97,7 +97,7 @@ def filter_mh_game_player():
     # First, filter by game mode
     filt_mh = match_history[match_history["GameMode"]==input.mode()]
     games_with_all_selected_players = []
-    if(input.inclusion){
+    if(input.inclusion()){
         # Then get games where any selected players are present
         games_with_all_selected_players = [k for k, v in participation_dictionary.items() if any(x in v for x in input.players())]
     }else{
