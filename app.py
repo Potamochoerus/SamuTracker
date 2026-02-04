@@ -20,18 +20,19 @@ with ui.sidebar(title="Filter games"):
                     label="Game mode",
                     choices=["3v3", "2v2", "1v1"])
 
-    ui.input_switch(
-        id = "inclusion",
-        label = "Inclusive",
-        value = False
-    )
-
-    ui.input_checkbox_group(
-        id="players",
-        label="Players",
-        choices=tracked_players,
-        selected=list(tracked_players.keys()),
-    )
+    @render.ui
+    def dynamic_player_inputs():
+        inputs_player = []
+        for i in tracked_players.items():
+            inputs_player.append(
+                ui.input_radio_buttons(id=f"switch_player_select_{i[0]}",
+                            label=ui.tags.span(ui.tags.b(f"{i[1]}"), style="font-size:14px;"),
+                            choices={"in":ui.tags.span("Include", style="font-size:14px;"), 
+                                    "out":ui.tags.span("Exclude", style="font-size:14px;"), 
+                                    "na":ui.tags.span("Any", style="font-size:14px;")},
+                            selected="na")
+            )
+        return inputs_player
 
     ui.input_slider(id="n_games", 
                     label="Number of games to use", 
@@ -93,21 +94,21 @@ ui.include_css(app_dir / "styles.css")
 
 @reactive.calc
 def filter_mh_game_player():
-    player_list = list(input.players())
     # First, filter by game mode
     filt_mh = match_history[match_history["GameMode"]==input.mode()]
-    games_with_all_selected_players = []
-    if(input.inclusion()){
-        # Then get games where any selected players are present
-        games_with_all_selected_players = [k for k, v in participation_dictionary.items() if any(x in v for x in input.players())]
-    }else{
-        # Then get only games where all selected players are present
-        games_with_all_selected_players = [k for k, v in participation_dictionary.items() if all(x in v for x in input.players())]
-    }
 
-    filt_mh = filt_mh[filt_mh["Timestamp"].isin(games_with_all_selected_players)]
+    # Filter games by selected players
+    players_selection = selected_players_dict()
+    must_include_players = [k for k, v in players_selection.items() if v == "in"]
+    must_exclude_players = [k for k, v in players_selection.items() if v == "out"]
+    
+    # Remove games with excluded players
+    games_without_excluded = [k for k, v in participation_dictionary.items() if all(x not in v for x in must_exclude_players)]
+    games_with_included = [k for k, v in participation_dictionary.items() if all(x in v for x in must_include_players)]
+    games_selected = list(set(games_without_excluded) & set(games_with_included))
+    filt_mh = filt_mh[filt_mh["Timestamp"].isin(games_selected)]
     # Keep only entries of players of interest
-    filt_mh = filt_mh[filt_mh["AccountId"].isin(player_list)]
+    filt_mh = filt_mh[filt_mh["AccountId"].isin(tracked_players.keys())]
     return filt_mh
 
 @reactive.calc
@@ -118,9 +119,15 @@ def filtered_mh():
     mh = mh[mh.Timestamp.isin(games_selected)]
     return mh
 
-
 @reactive.effect
 def _():
     max_n_games = len(list(set(filter_mh_game_player()["Timestamp"])))
     ui.update_slider(id="n_games",
                      max=max_n_games)
+        
+@reactive.calc
+def selected_players_dict():
+    out_dict = tracked_players.copy()
+    for k in out_dict.keys():
+        out_dict[k] = input[f"switch_player_select_{k}"]()
+    return out_dict
