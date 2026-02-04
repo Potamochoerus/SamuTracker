@@ -18,7 +18,7 @@ def str_to_timedelta(s):
 def handle_players_with_coma(fields):
     # Keep only the first field, fill the rest with NaN
     expected_cols = 16 
-    new_line = fields[:4] + ["_".join(fields[4:4+len(fields)-expected_cols+1])] + fields[-11:]
+    new_line = fields[:4] + [",".join(fields[4:4+len(fields)-expected_cols+1])] + fields[-11:]
     return new_line
 
 # Read all matches
