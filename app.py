@@ -48,6 +48,18 @@ with ui.sidebar(title="Filter games"):
 
     ui.tags.hr()
     ui.h5("Correlation options")
+
+    ui.input_switch(id="trendline_display", label="Trendline", value=True)
+
+    @render.ui
+    def dynamic_trendline_scope():
+        input_trendscope = []
+        if input.trendline_display():
+            input_trendscope = ui.input_switch(
+                id="trendline_scope", label="Trendline per player", value=False
+            )
+        return input_trendscope
+
     ui.input_select(
         id="x_var",
         label="X variable",
@@ -87,8 +99,14 @@ with ui.layout_columns():
 
         @render_widget
         def interactive_plot():
+            trend_type = "ols" if input.trendline_display() else None
+            trend_scope = "trace" if input.trendline_scope() else "overall"
             plot = scatterplot_interactive(
-                df=filtered_mh(), x=input.x_var(), y=input.y_var()
+                df=filtered_mh(),
+                x=input.x_var(),
+                y=input.y_var(),
+                trend=trend_type,
+                scope=trend_scope,
             )
             return plot
 
