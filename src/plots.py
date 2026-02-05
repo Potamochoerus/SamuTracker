@@ -2,6 +2,7 @@ import seaborn as sns
 import matplotlib as mpl
 import plotly.express as px
 from src.shared import variables_dictionary_all
+from scipy.stats import pearsonr
 
 
 def boxplot_stat(df, stat):
@@ -32,7 +33,11 @@ def boxplot_stat(df, stat):
     return bp
 
 
-def scatterplot_interactive(df, x, y):
+def scatterplot_interactive(df, x, y, trend, scope):
+    # Compute correlation coefficient
+    r, _ = pearsonr(df[x], df[y])
+    corr_text = f"r² = {r*r:.2f}"
+
     fig = px.scatter(
         df,
         x=x,
@@ -41,7 +46,20 @@ def scatterplot_interactive(df, x, y):
         custom_data=["FixedName", "Date"],
         labels=variables_dictionary_all,
         template="plotly_white",
+        trendline=trend,
+        trendline_scope=scope,
     )
+
+    if scope == "overall" and trend == "ols":
+        # Add correlation as annotation
+        fig.add_annotation(
+            x=df[x].max(),
+            y=df[y].min(),
+            text=corr_text,
+            showarrow=False,
+            font=dict(size=12, color="black"),
+        )
+
     fig.update_traces(
         hovertemplate=f"<b>Player:</b> %{{customdata[0]}}<br>"
         f"<b>Date:</b> %{{customdata[1]}}<br>"
