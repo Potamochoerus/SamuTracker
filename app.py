@@ -6,7 +6,6 @@ import numpy as np
 from src.shared import (
     app_dir,
     match_history,
-    threshold_score,
     tracked_players,
     participation_dictionary,
     variables_dictionary_numeric,
@@ -60,17 +59,17 @@ with ui.sidebar(title="Filter games"):
         id="y_var",
         label="Y variable",
         choices=variables_dictionary_numeric,
-        selected="PossessionTime",
+        selected="PossessionPerc",
     )
 
 
 with ui.layout_columns():
     with ui.card(full_screen=True):
-        ui.card_header("Possession time (s)")
+        ui.card_header("Possession time (%)")
 
         @render.plot
         def possession_plot():
-            plot = boxplot_stat(df=filtered_mh(), stat="PossessionTime")
+            plot = boxplot_stat(df=filtered_mh(), stat="PossessionPerc")
             return plot
 
     with ui.card(full_screen=True):

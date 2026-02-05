@@ -70,6 +70,18 @@ def read_history(data_path):
     game_mode = game_mode.drop(columns=["n_players"])
     match_history = pd.merge(match_history, game_mode, on="Timestamp", how="left")
 
+    # Reformat possession
+    match_history["PossessionTime"] = [
+        str_to_timedelta(x) for x in match_history["PossessionTime"]
+    ]
+    match_history["PossessionTime"] = match_history["PossessionTime"].dt.total_seconds()
+    match_history["GameLength"] = match_history.groupby("Timestamp")[
+        "PossessionTime"
+    ].transform("sum")
+    match_history["PossessionPerc"] = round(
+        match_history["PossessionTime"] * 100 / match_history["GameLength"], 1
+    )
+
     # Select players of interest
     match_history = match_history[
         (match_history.AccountId.isin(tracked_players.keys()))
@@ -77,12 +89,6 @@ def read_history(data_path):
 
     # Add Fixed name
     match_history["FixedName"] = match_history["AccountId"].map(tracked_players)
-
-    # Reformat possession
-    match_history["PossessionTime"] = [
-        str_to_timedelta(x) for x in match_history["PossessionTime"]
-    ]
-    match_history["PossessionTime"] = match_history["PossessionTime"].dt.total_seconds()
 
     return match_history
 
@@ -104,6 +110,8 @@ participation_dictionary = participation_dict(match_history)
 variables_dictionary_numeric = {
     "Score": "Score",
     "PossessionTime": "Possession time",
+    "PossessionPerc": "Possession (%)",
+    "GameLength": "Game length (s)",
     "Goals": "Goals",
     "Demolishes": "Demolishes",
     "Shots": "Shots",
@@ -118,6 +126,8 @@ variables_dictionary_all = {
     "Time": "Time",
     "Score": "Score",
     "PossessionTime": "Possession time",
+    "PossessionPerc": "Possession (%)",
+    "GameLength": "Game length (s)",
     "Goals": "Goals",
     "Demolishes": "Demolishes",
     "Shots": "Shots",
