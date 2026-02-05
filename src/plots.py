@@ -57,7 +57,7 @@ def scatterplot_interactive(df, x, y, trend, scope):
             y=df[y].min(),
             text=corr_text,
             showarrow=False,
-            font=dict(size=12, color="black"),
+            font=dict(size=12, color="#a16300"),
         )
 
     fig.update_traces(

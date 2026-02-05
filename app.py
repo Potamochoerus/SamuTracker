@@ -49,7 +49,7 @@ with ui.sidebar(title="Filter games"):
     ui.tags.hr()
     ui.h5("Correlation options")
 
-    ui.input_switch(id="trendline_display", label="Trendline", value=False)
+    ui.input_switch(id="trendline_display", label="Trendline", value=True)
 
     @render.ui
     def dynamic_trendline_scope():
