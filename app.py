@@ -79,17 +79,21 @@ with ui.layout_columns():
     with ui.card(full_screen=True):
         ui.card_header("Possession time (%)")
 
-        @render.plot
+        @render_widget
         def possession_plot():
             plot = boxplot_stat(df=filtered_mh(), stat="PossessionPerc")
+            for layer in plot.data:
+                layer.on_hover(on_point_hover)
             return plot
 
     with ui.card(full_screen=True):
         ui.card_header("Scores")
 
-        @render.plot
+        @render_widget
         def score_plot():
             plot = boxplot_stat(df=filtered_mh(), stat="Score")
+            for layer in plot.data:
+                layer.on_hover(on_point_hover)
             return plot
 
 
@@ -108,6 +112,8 @@ with ui.layout_columns():
                 trend=trend_type,
                 scope=trend_scope,
             )
+            for layer in plot.data:
+                layer.on_hover(on_point_hover)
             return plot
 
     with ui.card(full_screen=True):
@@ -125,6 +131,11 @@ with ui.layout_columns():
             df_grouped["AccountId"] = df_grouped["AccountId"].replace(tracked_players)
             df_grouped = df_grouped.rename(columns={"AccountId": "Player"})
             return df_grouped
+        
+        @render.text
+        def test_text():
+            test = hover_reactive.get()
+            return test
 
 
 ui.include_css(app_dir / "styles.css")
@@ -179,3 +190,8 @@ def selected_players_dict():
     for k in out_dict.keys():
         out_dict[k] = input[f"switch_player_select_{k}"]()
     return out_dict
+
+hover_reactive = reactive.value() 
+def on_point_hover(trace, points, state): 
+    if points.point_inds:
+        hover_reactive.set(trace["customdata"][points.point_inds][0][4])

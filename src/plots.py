@@ -1,8 +1,7 @@
-import seaborn as sns
-import matplotlib as mpl
 import plotly.express as px
 from src.shared import variables_dictionary_all
 from scipy.stats import pearsonr
+import plotly.graph_objects as go
 
 
 def boxplot_stat(df, stat):
@@ -12,25 +11,31 @@ def boxplot_stat(df, stat):
     :param df: Input data frame
     :param stat: Variable to plot
     """
-    bp = sns.boxplot(data=df, x="FixedName", y=stat, hue="FixedName", showfliers=False)
-    for patch in bp.artists:
-        fc = patch.get_facecolor()
-        patch.set_facecolor(mpl.colors.to_rgba(fc, 0.3))
-    bp = sns.stripplot(
-        data=df,
+    bp = px.box(
+        df,
         x="FixedName",
         y=stat,
-        hue="FixedName",
-        dodge=False,
-        jitter=True,
-        alpha=1,
-        palette="dark:black",
-        ax=bp,
+        points="all",
+        labels=variables_dictionary_all,
+        color="FixedName",
+        template="plotly_white",
+        custom_data=["FixedName", "Date", "Score", "PossessionPerc", "Timestamp"],
     )
-    bp.set_xlabel("")
-    bp.set_ylabel("")
-
-    return bp
+    for trace in bp.data:
+        if trace["type"] == "box":
+            trace.hoveron = "points"
+            trace.marker.size = 6
+            trace.marker.opacity = 1
+            trace.jitter = 0.5
+            trace.pointpos = 0
+            
+    bp.update_traces(
+        hovertemplate=f"<b>Player:</b> %{{customdata[0]}}<br>"
+        f"<b>Date:</b> %{{customdata[1]}}<br>"
+        f"<b>Score:</b> %{{customdata[2]}}<br>"
+        f"<b>Possession:</b> %{{customdata[3]}}%<br><extra></extra>"
+    )
+    return go.FigureWidget(bp)
 
 
 def scatterplot_interactive(df, x, y, trend, scope):
@@ -43,7 +48,7 @@ def scatterplot_interactive(df, x, y, trend, scope):
         x=x,
         y=y,
         color="FixedName",
-        custom_data=["FixedName", "Date"],
+        custom_data=["FixedName", "Date", "Timestamp"],
         labels=variables_dictionary_all,
         template="plotly_white",
         trendline=trend,
@@ -67,4 +72,4 @@ def scatterplot_interactive(df, x, y, trend, scope):
         f"<b>{y}:</b> %{{y}}<extra></extra>"
     )
 
-    return fig
+    return go.FigureWidget(fig)
