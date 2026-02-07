@@ -1,6 +1,5 @@
 # Import general lib
-import seaborn as sns
-import numpy as np
+from IPython.core.display import HTML
 
 # Import data from shared.py
 from src.shared import (
@@ -9,6 +8,7 @@ from src.shared import (
     tracked_players,
     participation_dictionary,
     variables_dictionary_numeric,
+    variables_dictionary_all,
 )
 
 # Import plotting functions
@@ -79,17 +79,21 @@ with ui.layout_columns():
     with ui.card(full_screen=True):
         ui.card_header("Possession time (%)")
 
-        @render.plot
+        @render_widget
         def possession_plot():
             plot = boxplot_stat(df=filtered_mh(), stat="PossessionPerc")
+            for layer in plot.data:
+                layer.on_hover(on_point_hover)
             return plot
 
     with ui.card(full_screen=True):
         ui.card_header("Scores")
 
-        @render.plot
+        @render_widget
         def score_plot():
             plot = boxplot_stat(df=filtered_mh(), stat="Score")
+            for layer in plot.data:
+                layer.on_hover(on_point_hover)
             return plot
 
 
@@ -108,6 +112,8 @@ with ui.layout_columns():
                 trend=trend_type,
                 scope=trend_scope,
             )
+            for layer in plot.data:
+                layer.on_hover(on_point_hover)
             return plot
 
     with ui.card(full_screen=True):
@@ -126,14 +132,68 @@ with ui.layout_columns():
             df_grouped = df_grouped.rename(columns={"AccountId": "Player"})
             return df_grouped
 
+        @render.ui
+        def hovered_game():
+            hovered_timestamp = hover_reactive.get()
+            game_out = match_history[
+                (match_history.Timestamp.isin([hovered_timestamp]))
+            ]
+            game_out = game_out[
+                [
+                    "TeamName",
+                    "PlayerName",
+                    "Score",
+                    "Goals",
+                    "Assists",
+                    "Saves",
+                    "Shots",
+                    "Demolishes",
+                ]
+            ]
+            game_out = game_out.rename(columns=variables_dictionary_all)
+            styled = (
+                game_out.style.apply(highlight_scores, axis=1)
+                .hide(subset=[variables_dictionary_all["TeamName"]], axis="columns")
+                .hide(axis="index")
+                .set_table_styles(
+                    [
+                        {"selector": "", "props": [("border", "2px solid grey")]},
+                        {
+                            "selector": "tbody td",
+                            "props": [("border", "1px solid grey")],
+                        },
+                        {
+                            "selector": "th",
+                            "props": [
+                                ("border", "1px solid grey"),
+                                ("text-align", "left"),
+                                ("padding-left", "4px"),
+                                ("font-size", "12px"),
+                            ],
+                        },
+                    ]
+                )
+                .set_properties(
+                    **{"text-align": "left", "padding-left": "4px", "font-size": "12px"}
+                )
+            )
+            return ui.HTML(styled.to_html())
+
 
 ui.include_css(app_dir / "styles.css")
 
 
 @reactive.calc
 def filter_mh_game_player():
+
+    # Select players of interest
+    filt_mh = match_history[(match_history.AccountId.isin(tracked_players.keys()))]
+
+    # Add Fixed name
+    filt_mh["FixedName"] = filt_mh["AccountId"].map(tracked_players)
+
     # First, filter by game mode
-    filt_mh = match_history[match_history["GameMode"] == input.mode()]
+    filt_mh = filt_mh[filt_mh["GameMode"] == input.mode()]
 
     # Filter games by selected players
     players_selection = selected_players_dict()
@@ -179,3 +239,20 @@ def selected_players_dict():
     for k in out_dict.keys():
         out_dict[k] = input[f"switch_player_select_{k}"]()
     return out_dict
+
+
+hover_reactive = reactive.value()
+
+
+def on_point_hover(trace, points, state):
+    if points.point_inds:
+        hover_reactive.set(trace["customdata"][points.point_inds][0][4])
+
+
+def highlight_scores(val):
+    team_color = list(val)[0]
+    if team_color == "Blue":
+        return ["background-color: lightskyblue"] * len(val)
+    elif team_color == "Orange":
+        return ["background-color: lightsalmon"] * len(val)
+    return [""] * len(val)

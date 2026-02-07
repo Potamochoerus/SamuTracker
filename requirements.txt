@@ -8,3 +8,4 @@ shiny==1.5.1
 shinywidgets==0.7.1
 statsmodels==0.14.6
 scipy==1.17.0
+Jinja2==3.1.6

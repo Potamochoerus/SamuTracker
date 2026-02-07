@@ -82,14 +82,6 @@ def read_history(data_path):
         match_history["PossessionTime"] * 100 / match_history["GameLength"], 1
     )
 
-    # Select players of interest
-    match_history = match_history[
-        (match_history.AccountId.isin(tracked_players.keys()))
-    ]
-
-    # Add Fixed name
-    match_history["FixedName"] = match_history["AccountId"].map(tracked_players)
-
     return match_history
 
 
@@ -120,6 +112,8 @@ variables_dictionary_numeric = {
 }
 
 variables_dictionary_all = {
+    "TeamName": "Team",
+    "PlayerName": "Player name",
     "AccountId": "Account ID",
     "FixedName": "Player",
     "Date": "Date",
