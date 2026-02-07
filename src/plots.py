@@ -35,6 +35,7 @@ def boxplot_stat(df, stat):
         f"<b>Score:</b> %{{customdata[2]}}<br>"
         f"<b>Possession:</b> %{{customdata[3]}}%<br><extra></extra>"
     )
+    bp.update_layout(showlegend=False)
     return go.FigureWidget(bp)
 
 
@@ -75,3 +76,28 @@ def scatterplot_interactive(df, x, y, trend, scope):
     )
 
     return go.FigureWidget(fig)
+
+
+def winrate_plot(df):
+    df = (
+        df.groupby("FixedName")["GameWin"]
+        .value_counts(normalize=True)
+        .unstack(fill_value=0)
+        .reset_index()
+        .rename_axis(None, axis=1)
+    )
+    df[["Winrate"]] = round(df[["Win"]] * 100, 2)
+    fig = px.bar(
+        df,
+        x="FixedName",
+        y="Winrate",
+        labels={"Winrate": "Winrate (%)", "FixedName": "Players"},
+        template="plotly_white",
+        custom_data=["FixedName", "Winrate"],
+    )
+    fig.update_traces(
+        hovertemplate=f"<b>Player:</b> %{{customdata[0]}}<br>"
+        f"<b>Winrate (%):</b> %{{customdata[1]}}<br>"
+    )
+    fig.update_yaxes(range=[0, 100])
+    return fig

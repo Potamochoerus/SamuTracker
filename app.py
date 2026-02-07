@@ -12,7 +12,7 @@ from src.shared import (
 )
 
 # Import plotting functions
-from src.plots import boxplot_stat, scatterplot_interactive
+from src.plots import boxplot_stat, scatterplot_interactive, winrate_plot
 
 # Import shiny
 from shiny import reactive
@@ -94,6 +94,14 @@ with ui.layout_columns():
             plot = boxplot_stat(df=filtered_mh(), stat="Score")
             for layer in plot.data:
                 layer.on_hover(on_point_hover)
+            return plot
+
+    with ui.card(full_screen=True):
+        ui.card_header("Winrates")
+
+        @render_widget
+        def wr_plot():
+            plot = winrate_plot(df=filtered_mh())
             return plot
 
 
