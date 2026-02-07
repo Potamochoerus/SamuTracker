@@ -3,6 +3,7 @@ import pandas as pd
 import glob
 import yaml
 from datetime import timedelta
+import numpy as np
 
 app_dir = Path(__file__).parent / ".."
 threshold_score = 100
@@ -82,6 +83,26 @@ def read_history(data_path):
         match_history["PossessionTime"] * 100 / match_history["GameLength"], 1
     )
 
+    # Compute win/loose
+    win_df = (
+        match_history.pivot_table(
+            index="Timestamp", columns="TeamName", values="Goals", aggfunc="sum"
+        )
+        .reset_index()
+        .rename_axis(None, axis=1)
+    )
+    win_df["Winner"] = np.where(
+        win_df["Blue"] > win_df["Orange"],
+        "Blue",
+        np.where(win_df["Orange"] > win_df["Blue"], "Orange", "Draw"),
+    )
+    win_df = win_df[["Timestamp", "Winner"]]
+    match_history = pd.merge(match_history, win_df, on="Timestamp", how="left")
+    match_history["GameWin"] = np.where(
+        match_history["Winner"] == match_history["TeamName"], "Win", "Loss"
+    )
+    match_history = match_history.drop(columns=["Winner"])
+
     return match_history
 
 
@@ -127,4 +148,5 @@ variables_dictionary_all = {
     "Shots": "Shots",
     "Saves": "Saves",
     "Assists": "Assists",
+    "GameWin": "Result",
 }
