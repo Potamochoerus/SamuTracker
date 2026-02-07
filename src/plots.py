@@ -28,7 +28,7 @@ def boxplot_stat(df, stat):
             trace.marker.opacity = 1
             trace.jitter = 0.5
             trace.pointpos = 0
-            
+
     bp.update_traces(
         hovertemplate=f"<b>Player:</b> %{{customdata[0]}}<br>"
         f"<b>Date:</b> %{{customdata[1]}}<br>"
@@ -48,7 +48,7 @@ def scatterplot_interactive(df, x, y, trend, scope):
         x=x,
         y=y,
         color="FixedName",
-        custom_data=["FixedName", "Date", "Timestamp"],
+        custom_data=["FixedName", "Date", "Score", "PossessionPerc", "Timestamp"],
         labels=variables_dictionary_all,
         template="plotly_white",
         trendline=trend,
@@ -65,11 +65,13 @@ def scatterplot_interactive(df, x, y, trend, scope):
             font=dict(size=12, color="#a16300"),
         )
 
+    x_lab = variables_dictionary_all[x]
+    y_lab = variables_dictionary_all[y]
     fig.update_traces(
         hovertemplate=f"<b>Player:</b> %{{customdata[0]}}<br>"
         f"<b>Date:</b> %{{customdata[1]}}<br>"
-        f"<b>{x}:</b> %{{x}}<br>"
-        f"<b>{y}:</b> %{{y}}<extra></extra>"
+        f"<b>{x_lab}:</b> %{{x}}<br>"
+        f"<b>{y_lab}:</b> %{{y}}<extra></extra>"
     )
 
     return go.FigureWidget(fig)
