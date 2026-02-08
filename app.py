@@ -130,11 +130,26 @@ with ui.layout_columns():
         def summary_table():
             df = filtered_mh()
             df_grouped = (
-                df.groupby("AccountId")[
-                    ["Goals", "Assists", "Saves", "Shots", "Demolishes"]
+                df.groupby("AccountId")
+                .agg(
+                    Games=("Timestamp", "size"),
+                    Goals=("Goals", "sum"),
+                    Assists=("Assists", "sum"),
+                    Saves=("Saves", "sum"),
+                    Shots=("Shots", "sum"),
+                    Demolishes=("Demolishes", "sum"),
+                )
+                .reset_index()[
+                    [
+                        "AccountId",
+                        "Games",
+                        "Goals",
+                        "Assists",
+                        "Saves",
+                        "Shots",
+                        "Demolishes",
+                    ]
                 ]
-                .sum()
-                .reset_index()
             )
             df_grouped["AccountId"] = df_grouped["AccountId"].replace(tracked_players)
             df_grouped = df_grouped.rename(columns={"AccountId": "Player"})
