@@ -35,6 +35,16 @@ def boxplot_stat(df, stat):
         f"<b>Score:</b> %{{customdata[2]}}<br>"
         f"<b>Possession:</b> %{{customdata[3]}}%<br><extra></extra>"
     )
+    bp.add_scatter(
+        x=[],
+        y=[],
+        mode="markers",
+        marker=dict(
+            size=40, color="black", symbol="line-ew", line=dict(width=3, color="black")
+        ),
+        name="highlight",
+        hoverinfo="skip",
+    )
     bp.update_layout(showlegend=False)
     return go.FigureWidget(bp)
 
@@ -74,6 +84,9 @@ def scatterplot_interactive(df, x, y, trend, scope):
         f"<b>{x_lab}:</b> %{{x}}<br>"
         f"<b>{y_lab}:</b> %{{y}}<extra></extra>"
     )
+    fig.add_scatter(
+        x=[], y=[], mode="markers", marker=dict(), name="highlight", hoverinfo="skip"
+    )
 
     return go.FigureWidget(fig)
 
@@ -100,4 +113,5 @@ def winrate_plot(df):
         f"<b>Winrate (%):</b> %{{customdata[1]}}<br>"
     )
     fig.update_yaxes(range=[0, 100])
+    fig = go.FigureWidget(fig)
     return fig

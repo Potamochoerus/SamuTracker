@@ -1,6 +1,3 @@
-# Import general lib
-from IPython.core.display import HTML
-
 # Import data from shared.py
 from src.shared import (
     app_dir,
@@ -18,6 +15,8 @@ from src.plots import boxplot_stat, scatterplot_interactive, winrate_plot
 from shiny import reactive
 from shiny.express import input, render, ui
 from shinywidgets import render_widget
+import numpy as np
+import plotly.express as px
 
 ui.page_opts(title="SamuTracker", fillable=True)
 
@@ -102,6 +101,8 @@ with ui.layout_columns():
         @render_widget
         def wr_plot():
             plot = winrate_plot(df=filtered_mh())
+            for layer in plot.data:
+                layer.on_hover(on_point_unhover)
             return plot
 
 
@@ -269,7 +270,66 @@ hover_reactive = reactive.value()
 
 def on_point_hover(trace, points, state):
     if points.point_inds:
+        idx = points.point_inds[0]
         hover_reactive.set(trace["customdata"][points.point_inds][0][4])
+        with possession_plot.widget.batch_update():
+            n_boxes = len(possession_plot.widget.data) - 1
+            custom_data = [
+                x["customdata"] for x in possession_plot.widget.data[0:n_boxes]
+            ]
+            hovered_match = np.vstack(
+                [x[x[:, 4] == hover_reactive.get()] for x in custom_data]
+            )
+            possession_plot.widget.data[n_boxes].x = hovered_match[:, 0]
+            possession_plot.widget.data[n_boxes].y = hovered_match[:, 3]
+
+        with score_plot.widget.batch_update():
+            n_boxes = len(score_plot.widget.data) - 1
+            custom_data = [x["customdata"] for x in score_plot.widget.data[0:n_boxes]]
+            hovered_match = np.vstack(
+                [x[x[:, 4] == hover_reactive.get()] for x in custom_data]
+            )
+            score_plot.widget.data[n_boxes].x = hovered_match[:, 0]
+            score_plot.widget.data[n_boxes].y = hovered_match[:, 2]
+
+        with interactive_plot.widget.batch_update():
+            mh = filtered_mh()
+            mh = mh[mh["Timestamp"] == hover_reactive.get()]
+            n_boxes = len(interactive_plot.widget.data) - 1
+            player_data = [
+                x
+                for x in interactive_plot.widget.data
+                if x["legendgroup"] in mh["FixedName"].tolist()
+            ]
+            color_map = dict(
+                zip(
+                    [x["legendgroup"] for x in player_data],
+                    [x["marker"]["color"] for x in player_data],
+                )
+            )
+            interactive_plot.widget.data[n_boxes].x = mh[input.x_var()]
+            interactive_plot.widget.data[n_boxes].y = mh[input.y_var()]
+            interactive_plot.widget.data[n_boxes].marker = dict(
+                size=14, color=mh["FixedName"].map(color_map), symbol="star"
+            )
+
+
+def on_point_unhover(trace, points, state):
+    hover_reactive.set(None)
+    with possession_plot.widget.batch_update():
+        n_boxes = len(possession_plot.widget.data) - 1
+        possession_plot.widget.data[n_boxes].x = []
+        possession_plot.widget.data[n_boxes].y = []
+
+    with score_plot.widget.batch_update():
+        n_boxes = len(score_plot.widget.data) - 1
+        score_plot.widget.data[n_boxes].x = []
+        score_plot.widget.data[n_boxes].y = []
+
+    with interactive_plot.widget.batch_update():
+        n_boxes = len(interactive_plot.widget.data) - 1
+        interactive_plot.widget.data[n_boxes].x = []
+        interactive_plot.widget.data[n_boxes].y = []
 
 
 def highlight_scores(val):
