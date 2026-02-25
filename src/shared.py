@@ -101,7 +101,7 @@ variables_dictionary_all = {
     "positioning_percent_farthest_from_ball": "Time farthest to ball (%)",
     "demo_inflicted": "Demolishes",
     "demo_taken": "Demolishes taken",
-    "positioning_goals_against_while_last_defender": "Goals taken when last defender",
+    #"positioning_goals_against_while_last_defender": "Goals taken when last defender", # Bugged column
     "gamelength": "Game length (s)",
     "gamewin": "Result",
     "gamemode": "Game mode",
@@ -117,6 +117,7 @@ def read_history(data_path):
     """
     all_matches = data_path / "main.pkl"
     match_history = pd.read_pickle(all_matches)
+    match_history = match_history.drop('positioning_goals_against_while_last_defender', axis=1) # Bugged column
 
     # Add date and time
     match_history[["date", "time"]] = match_history["timestamp"].str.split(
