@@ -19,7 +19,12 @@ def boxplot_stat(df, stat):
         labels=variables_dictionary_all,
         color="FixedName",
         template="plotly_white",
-        custom_data=["FixedName", variables_dictionary_all["date"], stat, variables_dictionary_all["timestamp"]],
+        custom_data=[
+            "FixedName",
+            variables_dictionary_all["date"],
+            stat,
+            variables_dictionary_all["timestamp"],
+        ],
     )
     for trace in bp.data:
         if trace["type"] == "box":
@@ -58,7 +63,12 @@ def scatterplot_interactive(df, x, y, trend, scope):
         x=x,
         y=y,
         color="FixedName",
-        custom_data=["FixedName", variables_dictionary_all["date"], variables_dictionary_all["core_score"], variables_dictionary_all["timestamp"]],
+        custom_data=[
+            "FixedName",
+            variables_dictionary_all["date"],
+            variables_dictionary_all["core_score"],
+            variables_dictionary_all["timestamp"],
+        ],
         labels=variables_dictionary_all,
         template="plotly_white",
         trendline=trend,

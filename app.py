@@ -5,7 +5,7 @@ from src.shared import (
     tracked_players,
     participation_dictionary,
     variables_dictionary_all,
-    numeric_variables
+    numeric_variables,
 )
 
 # Import plotting functions
@@ -152,15 +152,23 @@ with ui.layout_columns():
                     ]
                 ]
             )
-            df_grouped[variables_dictionary_all["id"]] = df_grouped[variables_dictionary_all["id"]].replace(tracked_players)
-            df_grouped = df_grouped.rename(columns={variables_dictionary_all["id"]: "Player"})
+            df_grouped[variables_dictionary_all["id"]] = df_grouped[
+                variables_dictionary_all["id"]
+            ].replace(tracked_players)
+            df_grouped = df_grouped.rename(
+                columns={variables_dictionary_all["id"]: "Player"}
+            )
             return df_grouped
 
         @render.ui
         def hovered_game():
             hovered_timestamp = hover_reactive.get()
             game_out = match_history[
-                (match_history[variables_dictionary_all["timestamp"]].isin([hovered_timestamp]))
+                (
+                    match_history[variables_dictionary_all["timestamp"]].isin(
+                        [hovered_timestamp]
+                    )
+                )
             ]
             game_out = game_out[
                 [
@@ -209,7 +217,9 @@ ui.include_css(app_dir / "styles.css")
 def filter_mh_game_player():
 
     # Select players of interest
-    filt_mh = match_history[(match_history[variables_dictionary_all["id"]].isin(tracked_players.keys()))]
+    filt_mh = match_history[
+        (match_history[variables_dictionary_all["id"]].isin(tracked_players.keys()))
+    ]
 
     # Add Fixed name
     filt_mh["FixedName"] = filt_mh[variables_dictionary_all["id"]].map(tracked_players)
@@ -234,9 +244,13 @@ def filter_mh_game_player():
         if all(x in v for x in must_include_players)
     ]
     games_selected = list(set(games_without_excluded) & set(games_with_included))
-    filt_mh = filt_mh[filt_mh[variables_dictionary_all["timestamp"]].isin(games_selected)]
+    filt_mh = filt_mh[
+        filt_mh[variables_dictionary_all["timestamp"]].isin(games_selected)
+    ]
     # Keep only entries of players of interest
-    filt_mh = filt_mh[filt_mh[variables_dictionary_all["id"]].isin(tracked_players.keys())]
+    filt_mh = filt_mh[
+        filt_mh[variables_dictionary_all["id"]].isin(tracked_players.keys())
+    ]
     return filt_mh
 
 
@@ -251,7 +265,9 @@ def filtered_mh():
 
 @reactive.effect
 def _():
-    max_n_games = len(list(set(filter_mh_game_player()[variables_dictionary_all["timestamp"]])))
+    max_n_games = len(
+        list(set(filter_mh_game_player()[variables_dictionary_all["timestamp"]]))
+    )
     ui.update_slider(id="n_games", max=max_n_games)
 
 
@@ -272,9 +288,7 @@ def on_point_hover(trace, points, state):
         hover_reactive.set(trace["customdata"][points.point_inds][0][3])
         with xvar_plot.widget.batch_update():
             n_boxes = len(xvar_plot.widget.data) - 1
-            custom_data = [
-                x["customdata"] for x in xvar_plot.widget.data[0:n_boxes]
-            ]
+            custom_data = [x["customdata"] for x in xvar_plot.widget.data[0:n_boxes]]
             hovered_match = np.vstack(
                 [x[x[:, 3] == hover_reactive.get()] for x in custom_data]
             )

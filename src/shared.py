@@ -66,7 +66,7 @@ variables_dictionary_all = {
     "movement_time_powerslide": "Time powersliding (s)",
     "movement_count_powerslide": "Number of powerslides",
     "movement_avg_powerslide_duration": "Average duration of powerslides (s)",
-    "movement_avg_speed_percentage" : "Average speed (%)",
+    "movement_avg_speed_percentage": "Average speed (%)",
     "movement_percent_slow_speed": "Time slow (%)",
     "movement_percent_boost_speed": "Time boost (%)",
     "movement_percent_supersonic_speed": "Time in supersonic (%)",
@@ -104,8 +104,9 @@ variables_dictionary_all = {
     "positioning_goals_against_while_last_defender": "Goals taken when last defender",
     "gamelength": "Game length (s)",
     "gamewin": "Result",
-    "gamemode": "Game mode"
+    "gamemode": "Game mode",
 }
+
 
 # Read all matches
 def read_history(data_path):
@@ -173,4 +174,3 @@ def participation_dict(match_history):
 match_history = read_history(raw_data_path)
 participation_dictionary = participation_dict(match_history)
 numeric_variables = match_history.select_dtypes(include="number").columns.tolist()
-
