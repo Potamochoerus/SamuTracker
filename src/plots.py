@@ -19,7 +19,7 @@ def boxplot_stat(df, stat):
         labels=variables_dictionary_all,
         color="FixedName",
         template="plotly_white",
-        custom_data=["FixedName", variables_dictionary_all["date"], variables_dictionary_all["core_score"], variables_dictionary_all["timestamp"]],
+        custom_data=["FixedName", variables_dictionary_all["date"], stat, variables_dictionary_all["timestamp"]],
     )
     for trace in bp.data:
         if trace["type"] == "box":

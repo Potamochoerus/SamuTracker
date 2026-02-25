@@ -14,7 +14,7 @@ variables_dictionary_all = {
     "team": "Team",
     "player": "Player name",
     "id": "Account ID",
-    "fixedname": "Player",
+    "FixedName": "Player",
     "timestamp": "Time stamp",
     "date": "Date",
     "time": "Time",
@@ -173,3 +173,4 @@ def participation_dict(match_history):
 match_history = read_history(raw_data_path)
 participation_dictionary = participation_dict(match_history)
 numeric_variables = match_history.select_dtypes(include="number").columns.tolist()
+

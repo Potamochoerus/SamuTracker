@@ -76,21 +76,21 @@ with ui.sidebar(title="Filter games"):
 
 with ui.layout_columns():
     with ui.card(full_screen=True):
-        ui.card_header("Average distance to ball")
+        ui.card_header("X variable plot")
 
         @render_widget
-        def possession_plot():
-            plot = boxplot_stat(df=filtered_mh(), stat=variables_dictionary_all["positioning_avg_distance_to_ball"])
+        def xvar_plot():
+            plot = boxplot_stat(df=filtered_mh(), stat=input.x_var())
             for layer in plot.data:
                 layer.on_hover(on_point_hover)
             return plot
 
     with ui.card(full_screen=True):
-        ui.card_header("Scores")
+        ui.card_header("Y variable plot")
 
         @render_widget
-        def score_plot():
-            plot = boxplot_stat(df=filtered_mh(), stat=variables_dictionary_all["core_score"])
+        def yvar_plot():
+            plot = boxplot_stat(df=filtered_mh(), stat=input.y_var())
             for layer in plot.data:
                 layer.on_hover(on_point_hover)
             return plot
@@ -270,25 +270,25 @@ def on_point_hover(trace, points, state):
     if points.point_inds:
         idx = points.point_inds[0]
         hover_reactive.set(trace["customdata"][points.point_inds][0][3])
-        with possession_plot.widget.batch_update():
-            n_boxes = len(possession_plot.widget.data) - 1
+        with xvar_plot.widget.batch_update():
+            n_boxes = len(xvar_plot.widget.data) - 1
             custom_data = [
-                x["customdata"] for x in possession_plot.widget.data[0:n_boxes]
+                x["customdata"] for x in xvar_plot.widget.data[0:n_boxes]
             ]
             hovered_match = np.vstack(
-                [x[x[:, 4] == hover_reactive.get()] for x in custom_data]
+                [x[x[:, 3] == hover_reactive.get()] for x in custom_data]
             )
-            possession_plot.widget.data[n_boxes].x = hovered_match[:, 0]
-            possession_plot.widget.data[n_boxes].y = hovered_match[:, 3]
+            xvar_plot.widget.data[n_boxes].x = hovered_match[:, 0]
+            xvar_plot.widget.data[n_boxes].y = hovered_match[:, 2]
 
-        with score_plot.widget.batch_update():
-            n_boxes = len(score_plot.widget.data) - 1
-            custom_data = [x["customdata"] for x in score_plot.widget.data[0:n_boxes]]
+        with yvar_plot.widget.batch_update():
+            n_boxes = len(yvar_plot.widget.data) - 1
+            custom_data = [x["customdata"] for x in yvar_plot.widget.data[0:n_boxes]]
             hovered_match = np.vstack(
-                [x[x[:, 4] == hover_reactive.get()] for x in custom_data]
+                [x[x[:, 3] == hover_reactive.get()] for x in custom_data]
             )
-            score_plot.widget.data[n_boxes].x = hovered_match[:, 0]
-            score_plot.widget.data[n_boxes].y = hovered_match[:, 2]
+            yvar_plot.widget.data[n_boxes].x = hovered_match[:, 0]
+            yvar_plot.widget.data[n_boxes].y = hovered_match[:, 2]
 
         with interactive_plot.widget.batch_update():
             mh = filtered_mh()
@@ -314,15 +314,15 @@ def on_point_hover(trace, points, state):
 
 def on_point_unhover(trace, points, state):
     hover_reactive.set(None)
-    with possession_plot.widget.batch_update():
-        n_boxes = len(possession_plot.widget.data) - 1
-        possession_plot.widget.data[n_boxes].x = []
-        possession_plot.widget.data[n_boxes].y = []
+    with xvar_plot.widget.batch_update():
+        n_boxes = len(xvar_plot.widget.data) - 1
+        xvar_plot.widget.data[n_boxes].x = []
+        xvar_plot.widget.data[n_boxes].y = []
 
-    with score_plot.widget.batch_update():
-        n_boxes = len(score_plot.widget.data) - 1
-        score_plot.widget.data[n_boxes].x = []
-        score_plot.widget.data[n_boxes].y = []
+    with yvar_plot.widget.batch_update():
+        n_boxes = len(yvar_plot.widget.data) - 1
+        yvar_plot.widget.data[n_boxes].x = []
+        yvar_plot.widget.data[n_boxes].y = []
 
     with interactive_plot.widget.batch_update():
         n_boxes = len(interactive_plot.widget.data) - 1
