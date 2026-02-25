@@ -4,8 +4,8 @@ from src.shared import (
     match_history,
     tracked_players,
     participation_dictionary,
-    variables_dictionary_numeric,
     variables_dictionary_all,
+    numeric_variables,
 )
 
 # Import plotting functions
@@ -62,35 +62,35 @@ with ui.sidebar(title="Filter games"):
     ui.input_select(
         id="x_var",
         label="X variable",
-        choices=variables_dictionary_numeric,
-        selected="Score",
+        choices=numeric_variables,
+        selected=variables_dictionary_all["core_score"],
     )
 
     ui.input_select(
         id="y_var",
         label="Y variable",
-        choices=variables_dictionary_numeric,
-        selected="PossessionPerc",
+        choices=numeric_variables,
+        selected=variables_dictionary_all["core_goals"],
     )
 
 
 with ui.layout_columns():
     with ui.card(full_screen=True):
-        ui.card_header("Possession time (%)")
+        ui.card_header("X variable plot")
 
         @render_widget
-        def possession_plot():
-            plot = boxplot_stat(df=filtered_mh(), stat="PossessionPerc")
+        def xvar_plot():
+            plot = boxplot_stat(df=filtered_mh(), stat=input.x_var())
             for layer in plot.data:
                 layer.on_hover(on_point_hover)
             return plot
 
     with ui.card(full_screen=True):
-        ui.card_header("Scores")
+        ui.card_header("Y variable plot")
 
         @render_widget
-        def score_plot():
-            plot = boxplot_stat(df=filtered_mh(), stat="Score")
+        def yvar_plot():
+            plot = boxplot_stat(df=filtered_mh(), stat=input.y_var())
             for layer in plot.data:
                 layer.on_hover(on_point_hover)
             return plot
@@ -131,18 +131,18 @@ with ui.layout_columns():
         def summary_table():
             df = filtered_mh()
             df_grouped = (
-                df.groupby("AccountId")
+                df.groupby(variables_dictionary_all["id"])
                 .agg(
-                    Games=("Timestamp", "size"),
-                    Goals=("Goals", "sum"),
-                    Assists=("Assists", "sum"),
-                    Saves=("Saves", "sum"),
-                    Shots=("Shots", "sum"),
-                    Demolishes=("Demolishes", "sum"),
+                    Games=(variables_dictionary_all["timestamp"], "size"),
+                    Goals=(variables_dictionary_all["core_goals"], "sum"),
+                    Assists=(variables_dictionary_all["core_assists"], "sum"),
+                    Saves=(variables_dictionary_all["core_saves"], "sum"),
+                    Shots=(variables_dictionary_all["core_shots"], "sum"),
+                    Demolishes=(variables_dictionary_all["demo_inflicted"], "sum"),
                 )
                 .reset_index()[
                     [
-                        "AccountId",
+                        variables_dictionary_all["id"],
                         "Games",
                         "Goals",
                         "Assists",
@@ -152,32 +152,38 @@ with ui.layout_columns():
                     ]
                 ]
             )
-            df_grouped["AccountId"] = df_grouped["AccountId"].replace(tracked_players)
-            df_grouped = df_grouped.rename(columns={"AccountId": "Player"})
+            df_grouped[variables_dictionary_all["id"]] = df_grouped[
+                variables_dictionary_all["id"]
+            ].replace(tracked_players)
+            df_grouped = df_grouped.rename(
+                columns={variables_dictionary_all["id"]: "Player"}
+            )
             return df_grouped
 
         @render.ui
         def hovered_game():
             hovered_timestamp = hover_reactive.get()
             game_out = match_history[
-                (match_history.Timestamp.isin([hovered_timestamp]))
+                (
+                    match_history[variables_dictionary_all["timestamp"]].isin(
+                        [hovered_timestamp]
+                    )
+                )
             ]
             game_out = game_out[
                 [
-                    "TeamName",
-                    "PlayerName",
-                    "Score",
-                    "Goals",
-                    "Assists",
-                    "Saves",
-                    "Shots",
-                    "Demolishes",
+                    variables_dictionary_all["team"],
+                    variables_dictionary_all["player"],
+                    variables_dictionary_all["core_score"],
+                    variables_dictionary_all["core_goals"],
+                    variables_dictionary_all["core_saves"],
+                    variables_dictionary_all["core_shots"],
+                    variables_dictionary_all["demo_inflicted"],
                 ]
             ]
-            game_out = game_out.rename(columns=variables_dictionary_all)
             styled = (
                 game_out.style.apply(highlight_scores, axis=1)
-                .hide(subset=[variables_dictionary_all["TeamName"]], axis="columns")
+                .hide(subset=[variables_dictionary_all["team"]], axis="columns")
                 .hide(axis="index")
                 .set_table_styles(
                     [
@@ -211,13 +217,15 @@ ui.include_css(app_dir / "styles.css")
 def filter_mh_game_player():
 
     # Select players of interest
-    filt_mh = match_history[(match_history.AccountId.isin(tracked_players.keys()))]
+    filt_mh = match_history[
+        (match_history[variables_dictionary_all["id"]].isin(tracked_players.keys()))
+    ]
 
     # Add Fixed name
-    filt_mh["FixedName"] = filt_mh["AccountId"].map(tracked_players)
+    filt_mh["FixedName"] = filt_mh[variables_dictionary_all["id"]].map(tracked_players)
 
     # First, filter by game mode
-    filt_mh = filt_mh[filt_mh["GameMode"] == input.mode()]
+    filt_mh = filt_mh[filt_mh[variables_dictionary_all["gamemode"]] == input.mode()]
 
     # Filter games by selected players
     players_selection = selected_players_dict()
@@ -236,24 +244,30 @@ def filter_mh_game_player():
         if all(x in v for x in must_include_players)
     ]
     games_selected = list(set(games_without_excluded) & set(games_with_included))
-    filt_mh = filt_mh[filt_mh["Timestamp"].isin(games_selected)]
+    filt_mh = filt_mh[
+        filt_mh[variables_dictionary_all["timestamp"]].isin(games_selected)
+    ]
     # Keep only entries of players of interest
-    filt_mh = filt_mh[filt_mh["AccountId"].isin(tracked_players.keys())]
+    filt_mh = filt_mh[
+        filt_mh[variables_dictionary_all["id"]].isin(tracked_players.keys())
+    ]
     return filt_mh
 
 
 @reactive.calc
 def filtered_mh():
     mh = filter_mh_game_player()
-    unique_games = list(set(mh.Timestamp))
+    unique_games = list(set(mh[variables_dictionary_all["timestamp"]]))
     games_selected = sorted(unique_games, reverse=True)[0 : input.n_games()]
-    mh = mh[mh.Timestamp.isin(games_selected)]
+    mh = mh[mh[variables_dictionary_all["timestamp"]].isin(games_selected)]
     return mh
 
 
 @reactive.effect
 def _():
-    max_n_games = len(list(set(filter_mh_game_player()["Timestamp"])))
+    max_n_games = len(
+        list(set(filter_mh_game_player()[variables_dictionary_all["timestamp"]]))
+    )
     ui.update_slider(id="n_games", max=max_n_games)
 
 
@@ -271,30 +285,28 @@ hover_reactive = reactive.value()
 def on_point_hover(trace, points, state):
     if points.point_inds:
         idx = points.point_inds[0]
-        hover_reactive.set(trace["customdata"][points.point_inds][0][4])
-        with possession_plot.widget.batch_update():
-            n_boxes = len(possession_plot.widget.data) - 1
-            custom_data = [
-                x["customdata"] for x in possession_plot.widget.data[0:n_boxes]
-            ]
+        hover_reactive.set(trace["customdata"][points.point_inds][0][3])
+        with xvar_plot.widget.batch_update():
+            n_boxes = len(xvar_plot.widget.data) - 1
+            custom_data = [x["customdata"] for x in xvar_plot.widget.data[0:n_boxes]]
             hovered_match = np.vstack(
-                [x[x[:, 4] == hover_reactive.get()] for x in custom_data]
+                [x[x[:, 3] == hover_reactive.get()] for x in custom_data]
             )
-            possession_plot.widget.data[n_boxes].x = hovered_match[:, 0]
-            possession_plot.widget.data[n_boxes].y = hovered_match[:, 3]
+            xvar_plot.widget.data[n_boxes].x = hovered_match[:, 0]
+            xvar_plot.widget.data[n_boxes].y = hovered_match[:, 2]
 
-        with score_plot.widget.batch_update():
-            n_boxes = len(score_plot.widget.data) - 1
-            custom_data = [x["customdata"] for x in score_plot.widget.data[0:n_boxes]]
+        with yvar_plot.widget.batch_update():
+            n_boxes = len(yvar_plot.widget.data) - 1
+            custom_data = [x["customdata"] for x in yvar_plot.widget.data[0:n_boxes]]
             hovered_match = np.vstack(
-                [x[x[:, 4] == hover_reactive.get()] for x in custom_data]
+                [x[x[:, 3] == hover_reactive.get()] for x in custom_data]
             )
-            score_plot.widget.data[n_boxes].x = hovered_match[:, 0]
-            score_plot.widget.data[n_boxes].y = hovered_match[:, 2]
+            yvar_plot.widget.data[n_boxes].x = hovered_match[:, 0]
+            yvar_plot.widget.data[n_boxes].y = hovered_match[:, 2]
 
         with interactive_plot.widget.batch_update():
             mh = filtered_mh()
-            mh = mh[mh["Timestamp"] == hover_reactive.get()]
+            mh = mh[mh[variables_dictionary_all["timestamp"]] == hover_reactive.get()]
             n_boxes = len(interactive_plot.widget.data) - 1
             player_data = [
                 x
@@ -316,15 +328,15 @@ def on_point_hover(trace, points, state):
 
 def on_point_unhover(trace, points, state):
     hover_reactive.set(None)
-    with possession_plot.widget.batch_update():
-        n_boxes = len(possession_plot.widget.data) - 1
-        possession_plot.widget.data[n_boxes].x = []
-        possession_plot.widget.data[n_boxes].y = []
+    with xvar_plot.widget.batch_update():
+        n_boxes = len(xvar_plot.widget.data) - 1
+        xvar_plot.widget.data[n_boxes].x = []
+        xvar_plot.widget.data[n_boxes].y = []
 
-    with score_plot.widget.batch_update():
-        n_boxes = len(score_plot.widget.data) - 1
-        score_plot.widget.data[n_boxes].x = []
-        score_plot.widget.data[n_boxes].y = []
+    with yvar_plot.widget.batch_update():
+        n_boxes = len(yvar_plot.widget.data) - 1
+        yvar_plot.widget.data[n_boxes].x = []
+        yvar_plot.widget.data[n_boxes].y = []
 
     with interactive_plot.widget.batch_update():
         n_boxes = len(interactive_plot.widget.data) - 1
@@ -334,8 +346,8 @@ def on_point_unhover(trace, points, state):
 
 def highlight_scores(val):
     team_color = list(val)[0]
-    if team_color == "Blue":
+    if team_color == "blue":
         return ["background-color: lightskyblue"] * len(val)
-    elif team_color == "Orange":
+    elif team_color == "orange":
         return ["background-color: lightsalmon"] * len(val)
     return [""] * len(val)
