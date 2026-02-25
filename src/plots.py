@@ -19,7 +19,7 @@ def boxplot_stat(df, stat):
         labels=variables_dictionary_all,
         color="FixedName",
         template="plotly_white",
-        custom_data=["FixedName", "Date", "Score", "PossessionPerc", "Timestamp"],
+        custom_data=["FixedName", variables_dictionary_all["date"], variables_dictionary_all["core_score"], variables_dictionary_all["timestamp"]],
     )
     for trace in bp.data:
         if trace["type"] == "box":
@@ -32,8 +32,7 @@ def boxplot_stat(df, stat):
     bp.update_traces(
         hovertemplate=f"<b>Player:</b> %{{customdata[0]}}<br>"
         f"<b>Date:</b> %{{customdata[1]}}<br>"
-        f"<b>Score:</b> %{{customdata[2]}}<br>"
-        f"<b>Possession:</b> %{{customdata[3]}}%<br><extra></extra>"
+        f"<b>{stat}:</b> %{{y}}<br><extra></extra>"
     )
     bp.add_scatter(
         x=[],
@@ -59,7 +58,7 @@ def scatterplot_interactive(df, x, y, trend, scope):
         x=x,
         y=y,
         color="FixedName",
-        custom_data=["FixedName", "Date", "Score", "PossessionPerc", "Timestamp"],
+        custom_data=["FixedName", variables_dictionary_all["date"], variables_dictionary_all["core_score"], variables_dictionary_all["timestamp"]],
         labels=variables_dictionary_all,
         template="plotly_white",
         trendline=trend,
@@ -76,13 +75,13 @@ def scatterplot_interactive(df, x, y, trend, scope):
             font=dict(size=12, color="#a16300"),
         )
 
-    x_lab = variables_dictionary_all[x]
-    y_lab = variables_dictionary_all[y]
+    x_lab = x
+    y_lab = y
     fig.update_traces(
         hovertemplate=f"<b>Player:</b> %{{customdata[0]}}<br>"
         f"<b>Date:</b> %{{customdata[1]}}<br>"
         f"<b>{x_lab}:</b> %{{x}}<br>"
-        f"<b>{y_lab}:</b> %{{y}}<extra></extra>"
+        f"<b>{y_lab}:</b> %{{y}}<br><extra></extra>"
     )
     fig.add_scatter(
         x=[], y=[], mode="markers", marker=dict(), name="highlight", hoverinfo="skip"
@@ -93,13 +92,13 @@ def scatterplot_interactive(df, x, y, trend, scope):
 
 def winrate_plot(df):
     df = (
-        df.groupby("FixedName")["GameWin"]
+        df.groupby("FixedName")[variables_dictionary_all["gamewin"]]
         .value_counts(normalize=True)
         .unstack(fill_value=0)
         .reset_index()
         .rename_axis(None, axis=1)
     )
-    df[["Winrate"]] = round(df[["Win"]] * 100, 2)
+    df[["Winrate"]] = round(df[["win"]] * 100, 2)
     fig = px.bar(
         df,
         x="FixedName",
